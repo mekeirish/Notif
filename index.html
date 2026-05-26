@@ -74,6 +74,9 @@
         #modal-edit-res .input-box, #modal-edit-liv .input-box { margin-bottom: 8px; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 5999; }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffcc00">
+    <link rel="apple-touch-icon" href="icon.png">
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4b6cb7">
@@ -233,47 +236,42 @@
     </div>
 
     <script>
-        // ================== SERVICE WORKER INTÉGRÉ ==================
-        // Création dynamique du service worker pour les notifications en arrière-plan
-        const swCode = `
-            self.addEventListener('install', event => {
-                self.skipWaiting();
-            });
-            self.addEventListener('activate', event => {
-                event.waitUntil(clients.claim());
-            });
-            self.addEventListener('message', event => {
-                if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
-                    self.registration.showNotification(event.data.title, {
-                        body: event.data.body,
-                        icon: 'https://via.placeholder.com/64?text=Kool',
-                        tag: event.data.tag || 'kool_notif',
-                        vibrate: [200, 100, 200]
-                    });
-                }
-            });
-            self.addEventListener('notificationclick', event => {
-                event.notification.close();
-                event.waitUntil(clients.openWindow('/'));
-            });
-        `;
-        const blob = new Blob([swCode], {type: 'application/javascript'});
-        const swUrl = URL.createObjectURL(blob);
-        
-        async function registerServiceWorker() {
+        // ================== SERVICE WORKER POUR NOTIFICATIONS EN ARRIÈRE-PLAN ==================
+        (function registerSW() {
             if ('serviceWorker' in navigator) {
-                try {
-                    const registration = await navigator.serviceWorker.register(swUrl);
+                // Création d'un service worker inline à partir d'un blob
+                const swCode = `
+                    self.addEventListener('install', event => { self.skipWaiting(); });
+                    self.addEventListener('activate', event => { event.waitUntil(clients.claim()); });
+                    self.addEventListener('message', event => {
+                        if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+                            self.registration.showNotification(event.data.title, {
+                                body: event.data.body,
+                                icon: 'https://via.placeholder.com/64?text=Kool',
+                                tag: event.data.tag || 'kool_notif',
+                                vibrate: [200, 100, 200]
+                            });
+                        }
+                    });
+                    self.addEventListener('notificationclick', event => {
+                        event.notification.close();
+                        event.waitUntil(clients.openWindow('/'));
+                    });
+                `;
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).then(reg => {
                     console.log('Service Worker enregistré avec succès');
-                    return registration;
-                } catch (err) {
-                    console.error('Échec du SW:', err);
-                }
+                }).catch(err => console.error('Erreur SW:', err));
             }
-            return null;
-        }
-        
-        async function showNotificationViaSW(title, body, tag) {
+        })();
+
+        async function showBrowserNotification(title, body, tag) {
+            if (!("Notification" in window)) return;
+            if (Notification.permission !== "granted") {
+                const perm = await Notification.requestPermission();
+                if (perm !== "granted") return;
+            }
             if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({
                     type: 'SHOW_NOTIFICATION',
@@ -282,10 +280,12 @@
                     tag: tag
                 });
             } else {
-                // Fallback si pas de SW actif (mais normalement il y en a)
-                if (Notification.permission === 'granted') {
-                    new Notification(title, { body, tag });
-                }
+                new Notification(title, { body, tag });
+            }
+        }
+        function requestNotificationPermission() {
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
             }
         }
         // ================== FIN SERVICE WORKER ==================
@@ -325,25 +325,7 @@
 
         function enqueueCloudWrite(task) { cloudWriteChain = cloudWriteChain.then(task).catch(err => console.error('Firebase write', err)); return cloudWriteChain; }
 
-        // ================== NOTIFICATIONS VIA SW ==================
-        function requestNotificationPermission() {
-            if ("Notification" in window && Notification.permission === "default") {
-                Notification.requestPermission();
-            }
-        }
-        
-        function showBrowserNotification(title, body, tag) {
-            if (!("Notification" in window)) return;
-            if (Notification.permission === "granted") {
-                showNotificationViaSW(title, body, tag);
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(perm => {
-                    if (perm === "granted") showNotificationViaSW(title, body, tag);
-                });
-            }
-        }
-        
-        // Client : suivi changement statut
+        // ================== NOTIFICATIONS ==================
         function updateClientOrderStatus() {
             if(!clientOrderTracking) return;
             const res = restaurants.find(r => r.id === clientOrderTracking.resId);
@@ -360,7 +342,6 @@
             lastClientOrderStatus = order.status;
         }
         
-        // Envoi message privé client -> livreur
         function sendPrivateMessage() {
             if(!clientOrderTracking) return;
             const res = restaurants.find(r => r.id === clientOrderTracking.resId);
@@ -374,7 +355,6 @@
             setNotif("Message envoyé");
         }
         
-        // Écoute messages pour livreur
         let currentMsgListener = null;
         function startPrivateMessagesListener(livreurId) {
             if(currentMsgListener) currentMsgListener();
@@ -390,7 +370,6 @@
             currentMsgListener = () => msgRef.off('child_added', handler);
         }
         
-        // Restaurateur : nouvelles commandes + prise par livreur + livrée
         let previousOrdersMap = new Map();
         function enhanceProOrdersWatch(resId) {
             const idx = resIndex(resId);
@@ -427,7 +406,6 @@
             stopProOrdersWatch = () => { ordersRef.off('value', handler); if(originalStop) originalStop(); };
         }
         
-        // Livreur : détection des commandes publiées (status waiting)
         let livreurNotifiedOrders = new Set();
         function startLivreurOrdersWatcher(livreurId) {
             const allResRef = db.ref('cloud_koul/restaurants');
@@ -451,7 +429,6 @@
                 });
             });
         }
-
         // ================== FIN NOTIFICATIONS ==================
 
         function onRestaurantsUpdated() { 
@@ -852,10 +829,7 @@
             const blob = new Blob([content], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `koul_master_log_${Date.now()}.txt`; a.click(); setNotif("LOGS EXPORTÉS");
         }
 
-        // Démarrage
-        registerServiceWorker().then(() => {
-            loadClientOrderTracking(); bindCloudListeners(); init(); requestNotificationPermission();
-        });
+        loadClientOrderTracking(); bindCloudListeners(); init(); requestNotificationPermission();
     </script>
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
