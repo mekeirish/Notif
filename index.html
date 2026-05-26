@@ -7,68 +7,50 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
+        /* ... (garde ton CSS existant) ... */
         :root { --primary: #ffcc00; --bg: #121212; --card-bg: #1e1e1e; --text: #ffffff; }
         body { background-color: #2c2c2c; color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding-bottom: 120px; transition: background-color 0.5s ease; overflow-x: hidden; }
-
-        /* Écran de chargement */
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
         .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Zoom Image Plat */
         .img-plat-client { width: 60px; height: 60px; border-radius: 5px; object-fit: cover; transition: all 0.3s ease; cursor: pointer; z-index: 1; }
         .img-plat-client.zoom-image { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90vw; height: auto; max-height: 80vh; border-radius: 15px; z-index: 5000; box-shadow: 0 0 100px rgba(0,0,0,0.9); outline: 5000px solid rgba(0,0,0,0.8); }
-
         #notification-bar { width: 100%; min-height: 55px; background-color: #000; display: flex; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 4000; border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: bold; text-align: center; padding: 5px 15px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 1rem; text-transform: uppercase; position: relative; }
-
-        /* Barre de statut commande client */
         #order-status-bar { display: none; width: 100%; background: #111; border-bottom: 2px solid #333; padding: 8px 15px; box-sizing: border-box; font-size: 0.8rem; align-items: center; gap: 8px; position: sticky; top: 55px; z-index: 3900; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; animation: pulse-dot 1.5s infinite; }
         @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        /* Zone messagerie client */
         .private-msg-area { display: flex; gap: 8px; align-items: center; margin-left: auto; }
         .private-msg-area input { background: #333; border: 1px solid var(--primary); color: white; padding: 5px 10px; border-radius: 20px; width: 140px; font-size: 0.7rem; }
         .private-msg-area button { background: var(--primary); border: none; border-radius: 20px; padding: 4px 10px; cursor: pointer; font-weight: bold; color: black; font-size: 0.7rem; }
-
         header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .btn-pro-header { background-color: var(--primary); color: #000; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-
         .numpad-container { display: none; padding: 25px; background: #1a1a1a; border: 2px solid var(--primary); text-align: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3000; border-radius: 20px; box-shadow: 0 0 40px rgba(0,0,0,0.9); width: 280px; }
         .pin-display { background: #000; color: var(--primary); font-size: 1.8rem; padding: 15px; border-radius: 12px; margin-bottom: 20px; letter-spacing: 8px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #333; }
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .num-btn { background: #333; color: white; border: 1px solid #444; width: 65px; height: 65px; border-radius: 50%; font-size: 1.4rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .num-btn:active { background: var(--primary); color: #000; }
-
         .container { padding: 15px; }
         .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .card { background-color: #3d3d3d; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; border: 1px solid #444; }
         .card img { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 5px; }
-
         .dashboard-box { background-color: rgba(30, 30, 30, 0.9); border-radius: 15px; padding: 20px; border: 1px solid var(--primary); }
         .btn-menu-pro { width: 100%; background-color: #444; color: white; border: 1px solid #555; padding: 15px; margin-top: 10px; border-radius: 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .sub-section { display: none; margin-top: 5px; padding: 15px; background: #252525; border-radius: 8px; border-left: 3px solid var(--primary); }
         .input-box { width: 100%; padding: 12px; margin-bottom: 10px; background:#333; color:white; border:1px solid #444; border-radius:5px; box-sizing: border-box; }
-
         .hist-card { background: #1a1a1a; border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 0.8rem; border-left: 4px solid var(--primary); }
         .type-tag { font-size: 0.65rem; padding: 2px 5px; border-radius: 3px; background: #333; margin-bottom: 5px; display: inline-block; }
-
         .btn-icon { background: #333; border: 1px solid #555; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
         .plat-manage-card { display: flex; align-items: center; gap: 10px; background: #333; padding: 10px; border-radius: 8px; margin-bottom: 8px; }
         .mini-img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
-
         .order-card-pro { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444; }
         .order-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .btn-finish { background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; flex: 1; font-weight: bold; cursor: pointer; }
         .btn-reject { background: #cc0000; color: white; border: none; padding: 10px; border-radius: 5px; flex: 1; font-weight: bold; cursor: pointer; }
         .btn-call { background: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; flex: 1; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; }
-        
         #footer-cart { position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1a1a; border-top: 2px solid var(--primary); z-index: 2000; display: none; }
         .view-section { display: none; }
         .active { display: block; }
         .confirm-panel { background: #4d0000; padding: 10px; border-radius: 5px; margin-top: 10px; display: none; text-align: center; border: 1px solid #ff4444; }
-
-        /* Modal admin edit */
         #modal-edit-res, #modal-edit-liv { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid var(--primary); border-radius: 20px; padding: 25px; z-index: 6000; width: 300px; box-shadow: 0 0 60px rgba(0,0,0,0.95); box-sizing: border-box; }
         #modal-edit-res h3, #modal-edit-liv h3 { color: var(--primary); margin-top: 0; }
         #modal-edit-res .input-box, #modal-edit-liv .input-box { margin-bottom: 8px; }
@@ -82,214 +64,78 @@
 <meta name="theme-color" content="#4b6cb7">
 <link rel="apple-touch-icon" href="icon.png"></head>
 <body>
-
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        <h2 style="color:var(--primary); font-style:italic">KOOL</h2>
-    </div>
-
-    <div id="notification-bar">
-        <span id="notif-message">BIENVENUE</span>
-        <span id="client-secret-code-display" style="position: absolute; right: 15px; font-size: 0.7rem; color: #fff;"></span>
-    </div>
-
-    <div id="order-status-bar">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-label" style="color:white; font-weight:bold"></span>
-        <div id="private-msg-client" class="private-msg-area" style="display: none;">
-            <input type="text" id="client-msg-input" placeholder="Message pour livreur...">
-            <button onclick="sendPrivateMessage()">📨 Envoyer</button>
-        </div>
-    </div>
-
-    <header>
-        <h1 onclick="goToHome()" style="cursor:pointer">Kool</h1>
-        <button class="btn-pro-header" onclick="toggleLoginArea()">Pro</button>
-    </header>
-
+    <div id="loading-screen"><div class="spinner"></div><h2 style="color:var(--primary); font-style:italic">KOOL</h2></div>
+    <div id="notification-bar"><span id="notif-message">BIENVENUE</span><span id="client-secret-code-display" style="position: absolute; right: 15px; font-size: 0.7rem; color: #fff;"></span></div>
+    <div id="order-status-bar"><div class="status-dot" id="status-dot"></div><span id="status-label" style="color:white; font-weight:bold"></span><div id="private-msg-client" class="private-msg-area" style="display: none;"><input type="text" id="client-msg-input" placeholder="Message pour livreur..."><button onclick="sendPrivateMessage()">📨 Envoyer</button></div></div>
+    <header><h1 onclick="goToHome()" style="cursor:pointer">Kool</h1><button class="btn-pro-header" onclick="toggleLoginArea()">Pro</button></header>
     <div id="login-container" class="numpad-container"><div class="pin-display" id="pin-view"></div><div class="numpad" id="pad-main"></div><button onclick="toggleLoginArea()" style="margin-top:15px; background:none; border:none; color:#888">ANNULER</button></div>
     <div id="client-pin-container" class="numpad-container"><h3 style="color:var(--primary)">CODE SECRET</h3><div class="pin-display" id="client-pin-view"></div><div class="numpad" id="numpad-client"></div><button onclick="closeClientPin()" style="margin-top:15px; background:none; border:none; color:#888">ANNULER</button></div>
     <div id="delivery-validation-container" class="numpad-container"><h3 style="color:var(--primary)">CODE CLIENT</h3><div class="pin-display" id="delivery-pin-view"></div><div class="numpad" id="numpad-delivery"></div><button onclick="closeDeliveryPin()" style="margin-top:15px; background:none; border:none; color:#888">ANNULER</button></div>
-
     <div class="modal-overlay" id="modal-overlay" onclick="closeEditModal()"></div>
-    
-    <!-- Modal admin edit resto -->
-    <div id="modal-edit-res">
-        <h3>✏️ Modifier le Restaurant</h3>
-        <input type="text" id="edit-res-name" class="input-box" placeholder="Nom">
-        <input type="text" id="edit-res-code" class="input-box" placeholder="Code">
-        <input type="number" id="edit-res-dur" class="input-box" placeholder="Nouvelle validité (heures)">
-        <input type="file" id="edit-res-img" class="input-box" accept="image/*">
-        <p style="font-size:0.75rem; color:#888; margin:5px 0 10px">Laisser vide pour conserver l'image actuelle</p>
-        <button class="btn-pro-header" style="width:100%" onclick="saveEditRes()">ENREGISTRER</button>
-        <button onclick="closeEditModal()" style="margin-top:10px; background:none; border:none; color:#888; width:100%; cursor:pointer">ANNULER</button>
-    </div>
-
-    <!-- Modal admin edit livreur -->
-    <div id="modal-edit-liv">
-        <h3>✏️ Modifier le Livreur</h3>
-        <img id="edit-liv-img-preview" style="max-width:200px; max-height:200px; margin-bottom:10px; border-radius:5px; display:none">
-        <input type="text" id="edit-liv-name" class="input-box" placeholder="Nom">
-        <input type="text" id="edit-liv-code" class="input-box" placeholder="Code">
-        <input type="number" id="edit-liv-dur" class="input-box" placeholder="Nouvelle validité (heures)">
-        <input type="file" id="edit-liv-img" class="input-box" accept="image/*">
-        <p style="font-size:0.75rem; color:#888; margin:5px 0 10px">Laisser vide pour conserver l'image actuelle</p>
-        <button class="btn-pro-header" style="width:100%" onclick="saveEditLiv()">ENREGISTRER</button>
-        <button onclick="closeEditModal()" style="margin-top:10px; background:none; border:none; color:#888; width:100%; cursor:pointer">ANNULER</button>
-    </div>
-
+    <div id="modal-edit-res"><h3>✏️ Modifier le Restaurant</h3><input type="text" id="edit-res-name" class="input-box" placeholder="Nom"><input type="text" id="edit-res-code" class="input-box" placeholder="Code"><input type="number" id="edit-res-dur" class="input-box" placeholder="Nouvelle validité (heures)"><input type="file" id="edit-res-img" class="input-box" accept="image/*"><p style="font-size:0.75rem; color:#888; margin:5px 0 10px">Laisser vide pour conserver l'image actuelle</p><button class="btn-pro-header" style="width:100%" onclick="saveEditRes()">ENREGISTRER</button><button onclick="closeEditModal()" style="margin-top:10px; background:none; border:none; color:#888; width:100%; cursor:pointer">ANNULER</button></div>
+    <div id="modal-edit-liv"><h3>✏️ Modifier le Livreur</h3><img id="edit-liv-img-preview" style="max-width:200px; max-height:200px; margin-bottom:10px; border-radius:5px; display:none"><input type="text" id="edit-liv-name" class="input-box" placeholder="Nom"><input type="text" id="edit-liv-code" class="input-box" placeholder="Code"><input type="number" id="edit-liv-dur" class="input-box" placeholder="Nouvelle validité (heures)"><input type="file" id="edit-liv-img" class="input-box" accept="image/*"><p style="font-size:0.75rem; color:#888; margin:5px 0 10px">Laisser vide pour conserver l'image actuelle</p><button class="btn-pro-header" style="width:100%" onclick="saveEditLiv()">ENREGISTRER</button><button onclick="closeEditModal()" style="margin-top:10px; background:none; border:none; color:#888; width:100%; cursor:pointer">ANNULER</button></div>
     <div id="view-restaurants" class="view-section active container"><div class="grid-container" id="res-grid"></div></div>
-
-    <div id="view-menu-client" class="view-section container">
-        <button onclick="goToHome()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← RETOUR</button>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-            <h2 id="client-res-name" style="margin:0"></h2>
-            <button class="btn-pro-header" style="padding:5px 10px; font-size:0.8rem" onclick="rateCurrentRes()">NOTER ⭐</button>
-        </div>
-        <div id="plats-list-client"></div>
-        <div style="height: 160px;"></div>
-    </div>
-
-    <div id="view-admin-space" class="view-section container">
-        <button onclick="goToHome()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← DÉCONNEXION</button>
-        <div class="dashboard-box">
-            <h2>Admin</h2>
-            <button class="btn-menu-pro" onclick="toggleSec('adm-promo')">Message Promo <span>📣</span></button>
-            <div id="adm-promo" class="sub-section">
-                <input type="text" id="adm-promo-txt" class="input-box" placeholder="Votre message promo...">
-                <button class="btn-pro-header" style="width:100%" onclick="updatePromoMessage()">METTRE À JOUR</button>
-            </div>
-
-            <button class="btn-menu-pro" onclick="toggleSec('adm-res')">Restos <span>+</span></button>
-            <div id="adm-res" class="sub-section">
-                <input type="text" id="adm-res-n" class="input-box" placeholder="Nom">
-                <input type="text" id="adm-res-c" class="input-box" placeholder="Code">
-                <input type="number" id="adm-res-dur" class="input-box" placeholder="Validité du code (heures, ex: 24)">
-                <input type="file" id="adm-res-img" class="input-box" accept="image/*">
-                <button class="btn-pro-header" style="width:100%" onclick="adminCreateRes()">AJOUTER</button>
-                <div id="list-res-to-manage" style="margin-top:10px"></div>
-            </div>
-
-            <button class="btn-menu-pro" onclick="toggleSec('adm-liv')">Livreurs <span>+</span></button>
-            <div id="adm-liv" class="sub-section">
-                <input type="text" id="adm-liv-n" class="input-box" placeholder="Nom">
-                <input type="text" id="adm-liv-c" class="input-box" placeholder="Code">
-                <input type="number" id="adm-liv-dur" class="input-box" placeholder="Validité du code (heures, ex: 24)">
-                <input type="file" id="adm-liv-img" class="input-box" accept="image/*">
-                <button class="btn-pro-header" style="width:100%" onclick="adminCreateLiv()">AJOUTER</button>
-                <div id="list-liv-to-manage" style="margin-top:10px"></div>
-            </div>
-
-            <button class="btn-menu-pro" onclick="toggleSec('adm-hist-section')">Journal Global <span>📜</span></button>
-            <div id="adm-hist-section" class="sub-section">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                    <h3 style="margin:0">Historique</h3>
-                    <div>
-                        <button class="btn-icon" onclick="exportHistory()" title="Exporter">💾 TXT</button>
-                        <button class="btn-icon" onclick="showClearConfirm()" title="Vider" style="color:#ff4444">🗑️</button>
-                    </div>
-                </div>
-                <div id="clear-confirm-panel" class="confirm-panel">
-                    <p>Vider l'historique définitivement ?</p>
-                    <button class="btn-finish" onclick="clearHistory()">OUI</button>
-                    <button class="btn-reject" onclick="showClearConfirm(false)">NON</button>
-                </div>
-                <div id="admin-hist-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-pro-space" class="view-section container">
-        <button onclick="goToHome()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← DÉCONNEXION</button>
-        <div class="dashboard-box">
-            <h2 id="pro-res-title"></h2>
-            <div id="orders-list-pro"></div>
-            <button class="btn-menu-pro" onclick="toggleSec('add-plat')">Nouveau Plat <span>+</span></button>
-            <div id="add-plat" class="sub-section">
-                <input type="text" id="new-n" class="input-box" placeholder="Nom">
-                <input type="number" id="new-p" class="input-box" placeholder="Prix DZD">
-                <input type="number" id="new-s" class="input-box" placeholder="Stock initial">
-                <input type="file" id="new-img" class="input-box" accept="image/*">
-                <button class="btn-pro-header" style="width:100%" onclick="addNewPlat()">ENREGISTRER</button>
-            </div>
-            <button class="btn-menu-pro" onclick="toggleSec('manage-plats')">Stocks & Plats <span>⚙</span></button>
-            <div id="manage-plats" class="sub-section"></div>
-            
-            <hr style="border:0; border-top:1px solid #444; margin:20px 0">
-            <h3>Historique Restaurant</h3>
-            <div id="res-event-log" style="max-height:300px; overflow-y:auto;"></div>
-        </div>
-    </div>
-
-    <div id="view-livreur-space" class="view-section container">
-        <button onclick="logoutLivreur()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← DÉCONNEXION</button>
-        <div class="dashboard-box"><h2 id="liv-name"></h2><div id="liv-orders"></div><hr><div id="liv-hist"></div></div>
-    </div>
-
-    <div id="footer-cart">
-        <div id="cart-items-list" style="max-height:80px; overflow:auto; padding:10px; font-size:0.8rem"></div>
-        <div style="padding:0 10px"><input type="text" id="c-name" class="input-box" placeholder="Nom"><input type="tel" id="c-tel" class="input-box" placeholder="Tél"></div>
-        <div style="padding:10px; display:flex; justify-content:space-between; align-items:center">
-            <b>Total: <span id="cart-total">0</span> DZD</b>
-            <button class="btn-finish" style="flex:none; padding:10px 20px" onclick="openClientPin()">COMMANDER</button>
-        </div>
-    </div>
+    <div id="view-menu-client" class="view-section container"><button onclick="goToHome()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← RETOUR</button><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px"><h2 id="client-res-name" style="margin:0"></h2><button class="btn-pro-header" style="padding:5px 10px; font-size:0.8rem" onclick="rateCurrentRes()">NOTER ⭐</button></div><div id="plats-list-client"></div><div style="height: 160px;"></div></div>
+    <div id="view-admin-space" class="view-section container"><button onclick="goToHome()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← DÉCONNEXION</button><div class="dashboard-box"><h2>Admin</h2><button class="btn-menu-pro" onclick="toggleSec('adm-promo')">Message Promo <span>📣</span></button><div id="adm-promo" class="sub-section"><input type="text" id="adm-promo-txt" class="input-box" placeholder="Votre message promo..."><button class="btn-pro-header" style="width:100%" onclick="updatePromoMessage()">METTRE À JOUR</button></div><button class="btn-menu-pro" onclick="toggleSec('adm-res')">Restos <span>+</span></button><div id="adm-res" class="sub-section"><input type="text" id="adm-res-n" class="input-box" placeholder="Nom"><input type="text" id="adm-res-c" class="input-box" placeholder="Code"><input type="number" id="adm-res-dur" class="input-box" placeholder="Validité du code (heures, ex: 24)"><input type="file" id="adm-res-img" class="input-box" accept="image/*"><button class="btn-pro-header" style="width:100%" onclick="adminCreateRes()">AJOUTER</button><div id="list-res-to-manage" style="margin-top:10px"></div></div><button class="btn-menu-pro" onclick="toggleSec('adm-liv')">Livreurs <span>+</span></button><div id="adm-liv" class="sub-section"><input type="text" id="adm-liv-n" class="input-box" placeholder="Nom"><input type="text" id="adm-liv-c" class="input-box" placeholder="Code"><input type="number" id="adm-liv-dur" class="input-box" placeholder="Validité du code (heures, ex: 24)"><input type="file" id="adm-liv-img" class="input-box" accept="image/*"><button class="btn-pro-header" style="width:100%" onclick="adminCreateLiv()">AJOUTER</button><div id="list-liv-to-manage" style="margin-top:10px"></div></div><button class="btn-menu-pro" onclick="toggleSec('adm-hist-section')">Journal Global <span>📜</span></button><div id="adm-hist-section" class="sub-section"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px"><h3 style="margin:0">Historique</h3><div><button class="btn-icon" onclick="exportHistory()" title="Exporter">💾 TXT</button><button class="btn-icon" onclick="showClearConfirm()" title="Vider" style="color:#ff4444">🗑️</button></div></div><div id="clear-confirm-panel" class="confirm-panel"><p>Vider l'historique définitivement ?</p><button class="btn-finish" onclick="clearHistory()">OUI</button><button class="btn-reject" onclick="showClearConfirm(false)">NON</button></div><div id="admin-hist-list"></div></div></div></div>
+    <div id="view-pro-space" class="view-section container"><button onclick="goToHome()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← DÉCONNEXION</button><div class="dashboard-box"><h2 id="pro-res-title"></h2><div id="orders-list-pro"></div><button class="btn-menu-pro" onclick="toggleSec('add-plat')">Nouveau Plat <span>+</span></button><div id="add-plat" class="sub-section"><input type="text" id="new-n" class="input-box" placeholder="Nom"><input type="number" id="new-p" class="input-box" placeholder="Prix DZD"><input type="number" id="new-s" class="input-box" placeholder="Stock initial"><input type="file" id="new-img" class="input-box" accept="image/*"><button class="btn-pro-header" style="width:100%" onclick="addNewPlat()">ENREGISTRER</button></div><button class="btn-menu-pro" onclick="toggleSec('manage-plats')">Stocks & Plats <span>⚙</span></button><div id="manage-plats" class="sub-section"></div><hr style="border:0; border-top:1px solid #444; margin:20px 0"><h3>Historique Restaurant</h3><div id="res-event-log" style="max-height:300px; overflow-y:auto;"></div></div></div>
+    <div id="view-livreur-space" class="view-section container"><button onclick="logoutLivreur()" style="border:1px solid var(--primary); background:none; color:var(--primary); padding:8px; border-radius:5px; margin-bottom:15px">← DÉCONNEXION</button><div class="dashboard-box"><h2 id="liv-name"></h2><div id="liv-orders"></div><hr><div id="liv-hist"></div></div></div>
+    <div id="footer-cart"><div id="cart-items-list" style="max-height:80px; overflow:auto; padding:10px; font-size:0.8rem"></div><div style="padding:0 10px"><input type="text" id="c-name" class="input-box" placeholder="Nom"><input type="tel" id="c-tel" class="input-box" placeholder="Tél"></div><div style="padding:10px; display:flex; justify-content:space-between; align-items:center"><b>Total: <span id="cart-total">0</span> DZD</b><button class="btn-finish" style="flex:none; padding:10px 20px" onclick="openClientPin()">COMMANDER</button></div></div>
 
     <script>
-        // ================== SERVICE WORKER POUR NOTIFICATIONS EN ARRIÈRE-PLAN ==================
-        (function registerSW() {
-            if ('serviceWorker' in navigator) {
-                // Création d'un service worker inline à partir d'un blob
-                const swCode = `
-                    self.addEventListener('install', event => { self.skipWaiting(); });
-                    self.addEventListener('activate', event => { event.waitUntil(clients.claim()); });
-                    self.addEventListener('message', event => {
-                        if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
-                            self.registration.showNotification(event.data.title, {
-                                body: event.data.body,
-                                icon: 'https://via.placeholder.com/64?text=Kool',
-                                tag: event.data.tag || 'kool_notif',
-                                vibrate: [200, 100, 200]
-                            });
-                        }
-                    });
-                    self.addEventListener('notificationclick', event => {
-                        event.notification.close();
-                        event.waitUntil(clients.openWindow('/'));
-                    });
-                `;
-                const blob = new Blob([swCode], {type: 'application/javascript'});
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl).then(reg => {
-                    console.log('Service Worker enregistré avec succès');
-                }).catch(err => console.error('Erreur SW:', err));
+        // ================== SERVICE WORKER DYNAMIQUE ET NOTIFICATIONS ==================
+        (async function installSW() {
+            if (!('serviceWorker' in navigator)) return;
+            // Désenregistrer tout SW existant
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (let reg of regs) await reg.unregister();
+            
+            const swCode = `
+                const CACHE = 'kool-v1';
+                self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./','./index.html','./manifest.json','./icon.png']))); });
+                self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                self.addEventListener('message', e => {
+                    if (e.data?.type === 'SHOW_NOTIFICATION') {
+                        self.registration.showNotification(e.data.title, {
+                            body: e.data.body,
+                            icon: e.data.icon || '/icon.png',
+                            tag: e.data.tag || 'kool',
+                            vibrate: [200,100,200]
+                        });
+                    }
+                });
+                self.addEventListener('notificationclick', e => { e.notification.close(); e.waitUntil(clients.openWindow('/')); });
+                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+            `;
+            const blob = new Blob([swCode], {type: 'application/javascript'});
+            const url = URL.createObjectURL(blob);
+            const reg = await navigator.serviceWorker.register(url);
+            await navigator.serviceWorker.ready;
+            if (!navigator.serviceWorker.controller) {
+                await new Promise(resolve => {
+                    navigator.serviceWorker.addEventListener('controllerchange', resolve, {once: true});
+                });
             }
+            console.log('SW actif');
         })();
 
         async function showBrowserNotification(title, body, tag) {
-            if (!("Notification" in window)) return;
-            if (Notification.permission !== "granted") {
+            if (Notification.permission !== 'granted') {
                 const perm = await Notification.requestPermission();
-                if (perm !== "granted") return;
+                if (perm !== 'granted') return;
             }
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({
-                    type: 'SHOW_NOTIFICATION',
-                    title: title,
-                    body: body,
-                    tag: tag
-                });
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
             } else {
                 new Notification(title, { body, tag });
             }
         }
+        
         function requestNotificationPermission() {
-            if ("Notification" in window && Notification.permission === "default") {
-                Notification.requestPermission();
-            }
+            if (Notification.permission === 'default') Notification.requestPermission();
         }
         // ================== FIN SERVICE WORKER ==================
 
+        // ================== TOUT LE RESTE DE TON APPLICATION (Firebase, etc.) ==================
         const firebaseConfig = {
             apiKey: "AIzaSyD4ekJLYuL5QTsroQj_QlOUPohDwhlQ14s",
             authDomain: "koul-ec357.firebaseapp.com",
@@ -325,7 +171,6 @@
 
         function enqueueCloudWrite(task) { cloudWriteChain = cloudWriteChain.then(task).catch(err => console.error('Firebase write', err)); return cloudWriteChain; }
 
-        // ================== NOTIFICATIONS ==================
         function updateClientOrderStatus() {
             if(!clientOrderTracking) return;
             const res = restaurants.find(r => r.id === clientOrderTracking.resId);
@@ -429,7 +274,6 @@
                 });
             });
         }
-        // ================== FIN NOTIFICATIONS ==================
 
         function onRestaurantsUpdated() { 
             document.getElementById('loading-screen').style.display = 'none'; 
