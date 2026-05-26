@@ -832,6 +832,62 @@
         loadClientOrderTracking(); bindCloudListeners(); init(); requestNotificationPermission();
     </script>
 
+<!-- Custom script injected by Mastercode -->
+<script>
+// Script personnalisé pour Kool - Notifications push avec Mastercode
+(async function fixKoolNotifications() {
+    // Désenregistrer l'ancien service worker (celui par défaut de Mastercode)
+    if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let reg of registrations) await reg.unregister();
+    }
+    
+    // Créer un nouveau service worker qui gère cache + notifications
+    const swCode = `
+        const CACHE_NAME = 'kool-cache-v1';
+        self.addEventListener('install', e => {
+            self.skipWaiting();
+            e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./','./index.html','./manifest.json','./icon.png'])));
+        });
+        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+        self.addEventListener('message', e => {
+            if (e.data && e.data.type === 'SHOW_NOTIFICATION') {
+                self.registration.showNotification(e.data.title, {
+                    body: e.data.body,
+                    icon: e.data.icon || '/icon.png',
+                    tag: e.data.tag || 'kool-notif',
+                    vibrate: [200,100,200]
+                });
+            }
+        });
+        self.addEventListener('notificationclick', e => {
+            e.notification.close();
+            e.waitUntil(clients.openWindow('/'));
+        });
+        self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+    `;
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl = URL.createObjectURL(blob);
+    await navigator.serviceWorker.register(swUrl);
+    if (!navigator.serviceWorker.controller) {
+        await new Promise(resolve => navigator.serviceWorker.addEventListener('controllerchange', resolve, {once:true}));
+    }
+    
+    // Rediriger la fonction de notification vers le nouveau SW
+    const original = window.showBrowserNotification;
+    window.showBrowserNotification = async (title, body, tag) => {
+        if (Notification.permission !== 'granted') await Notification.requestPermission();
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({type:'SHOW_NOTIFICATION', title, body, tag});
+        } else {
+            new Notification(title, {body, tag});
+        }
+    };
+    if (Notification.permission === 'default') Notification.requestPermission();
+    console.log('✅ Notifications push prêtes');
+})();
+</script>
+
 <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
 </body>
 </html>
